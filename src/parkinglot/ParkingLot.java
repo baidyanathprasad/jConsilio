@@ -1,9 +1,12 @@
 package parkinglot;
 
 import parkinglot.enums.Ticket;
+import parkinglot.exceptions.InvalidExitException;
 import parkinglot.models.Level;
 import parkinglot.models.ParkingSpot;
 import parkinglot.models.Vehicle;
+import parkinglot.exceptions.InvalidArgumentException;
+import parkinglot.exceptions.ParkingFailedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -73,15 +76,71 @@ public class ParkingLot {
      * This method is synchronized to prevent race conditions where multiple threads could find
      * the same spot available and attempt to park in it concurrently. Synchronization ensures
      * atomic find-and-park operation.
+     *
+     * @param level the level to park in
+     * @param vehicle the vehicle to park
+     * @return the parking ticket if successful, null if no spot available
+     * @throws InvalidArgumentException if level or vehicle is null
+     * @throws ParkingFailedException if parking operation fails
      */
-    public synchronized Ticket parkVehicle(Level level, Vehicle vehicle) {
+    public synchronized Ticket parkVehicle(Level level, Vehicle vehicle) throws ParkingFailedException, InvalidArgumentException {
+        if (level == null) {
+            throw new InvalidArgumentException("Level cannot be null");
+        }
+        if (vehicle == null) {
+            throw new InvalidArgumentException("Vehicle cannot be null");
+        }
+
         ParkingSpot spot = getAvailableSpotOnAnyLevel(level, vehicle);
-        if (spot == null) return null;
+        if (spot == null) {
+            throw new ParkingFailedException("No available spot for " + vehicle.getType().name() +
+                    " vehicle with license plate: " + vehicle.getLicensePlate());
+        }
+
         String spotId = spot.parkVehicle(vehicle);
-        if (spotId == null) return null; // Parking failed
+        if (spotId == null) {
+            throw new ParkingFailedException("Failed to park vehicle at spot: " + spot.getSpotId());
+        }
 
         Ticket ticket = new Ticket("TICKET-" + System.currentTimeMillis(), spot, LocalDateTime.now());
         addActiveTicket(ticket.getTicketNumber(), ticket);
         return ticket;
+    }
+
+    /**
+     * Exit a vehicle from the parking lot.
+     * Calculates the parking fees, removes the vehicle from the spot, and unregisters the ticket.
+     *
+     * @param ticket the parking ticket for the vehicle
+     * @param exitTime the time when the vehicle is exiting
+     * @return the calculated parking fees
+     * @throws InvalidArgumentException if ticket or exitTime is null
+     * @throws IllegalStateException if the ticket is not found in active tickets or vehicle not in spot
+     */
+    public synchronized Double exitVehicle(Ticket ticket, LocalDateTime exitTime)
+            throws InvalidArgumentException, InvalidExitException {
+        if (ticket == null) {
+            throw new InvalidArgumentException("Ticket cannot be null");
+        }
+        if (exitTime == null) {
+            throw new InvalidArgumentException("Exit time cannot be null");
+        }
+
+        // Check if ticket exists in active tickets
+        if (!activeTickets.containsKey(ticket.getTicketNumber())) {
+            throw new IllegalStateException("Ticket not found in active tickets: " + ticket.getTicketNumber());
+        }
+
+        // Calculate parking fees
+        Double fees = ticket.calculateParkingFees(exitTime);
+
+        // Remove vehicle from spot
+        ParkingSpot spot = ticket.getParkingSpot();
+        spot.removeVehicle();
+
+        // Unregister the ticket
+        activeTickets.remove(ticket.getTicketNumber());
+
+        return fees;
     }
 }

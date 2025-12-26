@@ -2,6 +2,7 @@ package parkinglot.models;
 
 import parkinglot.enums.ParkingSpotType;
 import parkinglot.enums.VehicleType;
+import parkinglot.exceptions.InvalidArgumentException;
 
 import java.util.Objects;
 
@@ -15,7 +16,13 @@ public class ParkingSpot {
     private final ParkingSpotType parkingSpotType;
     private Vehicle vehicle;
 
-    public ParkingSpot(String spotId, ParkingSpotType parkingSpotType) {
+    public ParkingSpot(String spotId, ParkingSpotType parkingSpotType) throws InvalidArgumentException {
+        if (spotId == null || spotId.trim().isEmpty()) {
+            throw new InvalidArgumentException("Spot ID cannot be null or empty");
+        }
+        if (parkingSpotType == null) {
+            throw new InvalidArgumentException("Parking spot type cannot be null");
+        }
         this.spotId = spotId;
         this.isOccupied = false;
         this.parkingSpotType = parkingSpotType;
