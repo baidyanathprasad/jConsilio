@@ -1,4 +1,4 @@
-package parkinglot;
+package parkinglot.service;
 
 import parkinglot.enums.Ticket;
 import parkinglot.exceptions.InvalidExitException;
@@ -22,6 +22,7 @@ public class ParkingLot {
     private static volatile ParkingLot instance;
     private final List<Level> levels = new CopyOnWriteArrayList<>();
     private final Map<String, Ticket> activeTickets = new ConcurrentHashMap<>();
+    private TicketService ticketService = new TicketService();
 
     private ParkingLot() { }
 
@@ -132,7 +133,7 @@ public class ParkingLot {
         }
 
         // Calculate parking fees
-        Double fees = ticket.calculateParkingFees(exitTime);
+        Double fees = ticketService.calculateParkingFees(ticket, exitTime);
 
         // Remove vehicle from spot
         ParkingSpot spot = ticket.getParkingSpot();
@@ -142,5 +143,13 @@ public class ParkingLot {
         activeTickets.remove(ticket.getTicketNumber());
 
         return fees;
+    }
+
+    public TicketService getTicketService() {
+        return ticketService;
+    }
+
+    public void setTicketService(TicketService ticketService) {
+        this.ticketService = ticketService;
     }
 }

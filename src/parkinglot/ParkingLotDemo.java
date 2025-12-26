@@ -7,6 +7,7 @@ import parkinglot.exceptions.InvalidArgumentException;
 import parkinglot.models.Level;
 import parkinglot.models.ParkingSpot;
 import parkinglot.models.Vehicle;
+import parkinglot.service.ParkingLot;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
