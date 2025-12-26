@@ -92,11 +92,11 @@ public class Example {
 
 ## 🔧 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| `javac: command not found` | Install Java JDK |
-| `class not found` | Run compilation command |
-| `NoClassDefFoundError` | Recompile all files |
+| Issue                      | Solution                |
+|----------------------------|-------------------------|
+| `javac: command not found` | Install Java JDK        |
+| `class not found`          | Run compilation command |
+| `NoClassDefFoundError`     | Recompile all files     |
 
 ## 📚 Directory Reference
 
