@@ -22,7 +22,7 @@ public class ParkingLot {
     private static volatile ParkingLot instance;
     private final List<Level> levels = new CopyOnWriteArrayList<>();
     private final Map<String, Ticket> activeTickets = new ConcurrentHashMap<>();
-    private TicketService ticketService = new TicketService();
+    private final TicketService ticketService = new TicketService();
 
     private ParkingLot() { }
 
@@ -38,12 +38,10 @@ public class ParkingLot {
         return instance;
     }
 
-    // Add levels to parking lot
     public void addLevel(Level level) {
         levels.add(level);
     }
 
-    // add ticket to active tickets
     public void addActiveTicket(String ticketNumber, Ticket ticket) {
         activeTickets.put(ticketNumber, ticket);
     }
@@ -73,7 +71,7 @@ public class ParkingLot {
     /**
      * Try to park a vehicle in the parking lot. If successful, create and register a Ticket, and return it.
      * If parking fails, return null.
-     *
+     * <p>
      * This method is synchronized to prevent race conditions where multiple threads could find
      * the same spot available and attempt to park in it concurrently. Synchronization ensures
      * atomic find-and-park operation.
@@ -127,29 +125,16 @@ public class ParkingLot {
             throw new InvalidArgumentException("Exit time cannot be null");
         }
 
-        // Check if ticket exists in active tickets
         if (!activeTickets.containsKey(ticket.getTicketNumber())) {
             throw new IllegalStateException("Ticket not found in active tickets: " + ticket.getTicketNumber());
         }
 
-        // Calculate parking fees
+        // Calculate fees, remove vehicle from spot, and unregister ticket
         Double fees = ticketService.calculateParkingFees(ticket, exitTime);
-
-        // Remove vehicle from spot
         ParkingSpot spot = ticket.getParkingSpot();
         spot.removeVehicle();
-
-        // Unregister the ticket
         activeTickets.remove(ticket.getTicketNumber());
 
         return fees;
-    }
-
-    public TicketService getTicketService() {
-        return ticketService;
-    }
-
-    public void setTicketService(TicketService ticketService) {
-        this.ticketService = ticketService;
     }
 }
