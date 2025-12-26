@@ -6,10 +6,10 @@ import parkinglot.models.ParkingSpot;
 import parkinglot.models.Vehicle;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Represents a parking lot.
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ParkingLot {
     private static volatile ParkingLot instance;
-    private final List<Level> levels = new ArrayList<>();
+    private final List<Level> levels = new CopyOnWriteArrayList<>();
     private final Map<String, Ticket> activeTickets = new ConcurrentHashMap<>();
 
     private ParkingLot() { }
@@ -54,8 +54,9 @@ public class ParkingLot {
 
     /**
      * Try to find an available spot for vehicle across all levels and return the ParkingSpot, or null.
+     * This method is synchronized to ensure thread-safe spot search.
      */
-    public ParkingSpot getAvailableSpotOnAnyLevel(Level level, Vehicle vehicle) {
+    private synchronized ParkingSpot getAvailableSpotOnAnyLevel(Level level, Vehicle vehicle) {
         if (vehicle == null) return null;
         for (ParkingSpot spot : level.getParkingSpots()) {
             if (spot.isAssignable(vehicle)) {
@@ -68,8 +69,12 @@ public class ParkingLot {
     /**
      * Try to park a vehicle in the parking lot. If successful, create and register a Ticket, and return it.
      * If parking fails, return null.
+     *
+     * This method is synchronized to prevent race conditions where multiple threads could find
+     * the same spot available and attempt to park in it concurrently. Synchronization ensures
+     * atomic find-and-park operation.
      */
-    public Ticket parkVehicle(Level level, Vehicle vehicle) {
+    public synchronized Ticket parkVehicle(Level level, Vehicle vehicle) {
         ParkingSpot spot = getAvailableSpotOnAnyLevel(level, vehicle);
         if (spot == null) return null;
         String spotId = spot.parkVehicle(vehicle);
