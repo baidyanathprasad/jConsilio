@@ -1,6 +1,7 @@
 package parkinglot.models;
 
 import parkinglot.enums.ParkingSpotType;
+import parkinglot.enums.VehicleType;
 
 import java.util.Objects;
 
@@ -54,6 +55,21 @@ public class ParkingSpot {
     // Public method to check if a vehicle can be assigned to this spot
     public boolean isAssignable(Vehicle vehicle) {
         if (vehicle == null) return false;
-        return !isOccupied && (Objects.equals(this.parkingSpotType.getDisplayName(), vehicle.getType().name()));
+        if (isOccupied) return false;
+
+        // Map VehicleType to ParkingSpotType
+        ParkingSpotType requiredSpotType = getSpotTypeForVehicle(vehicle.getType());
+        return this.parkingSpotType == requiredSpotType;
+    }
+
+    /**
+     * Map a VehicleType to the corresponding ParkingSpotType.
+     */
+    private ParkingSpotType getSpotTypeForVehicle(VehicleType vehicleType) {
+        return switch (vehicleType) {
+            case BIKE -> ParkingSpotType.SMALL;
+            case CAR -> ParkingSpotType.MEDIUM;
+            case TRUCK -> ParkingSpotType.LARGE;
+        };
     }
 }

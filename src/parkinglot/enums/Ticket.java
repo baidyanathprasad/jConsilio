@@ -23,7 +23,7 @@ public class Ticket {
         return this.ticketNumber;
     }
 
-    public ParkingSpot getSpotId() {
+    public ParkingSpot getParkingSpot() {
         return this.parkingSpot;
     }
 
