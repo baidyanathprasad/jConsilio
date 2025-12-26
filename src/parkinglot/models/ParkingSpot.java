@@ -4,8 +4,6 @@ import parkinglot.enums.ParkingSpotType;
 import parkinglot.enums.VehicleType;
 import parkinglot.exceptions.InvalidArgumentException;
 
-import java.util.Objects;
-
 /**
  * Represents a parking spot in the parking lot.
  * @author Baidyanath
@@ -39,10 +37,6 @@ public class ParkingSpot {
 
     public Vehicle getVehicle() {
         return this.vehicle;
-    }
-
-    public ParkingSpotType getParkingSpotType() {
-        return this.parkingSpotType;
     }
 
     public String parkVehicle(Vehicle vehicle) {
